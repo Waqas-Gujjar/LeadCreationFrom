@@ -1,47 +1,37 @@
-import React, { useState } from "react";
+// AccidentLeadForm.js
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { US_STATES } from "./states";
 
-const US_STATES = [
-  "Alabama", "Alaska", "Arizona", "Arkansas", "California", "Colorado",
-  "Connecticut", "Delaware", "Florida", "Georgia", "Hawaii", "Idaho",
-  "Illinois", "Indiana", "Iowa", "Kansas", "Kentucky", "Louisiana",
-  "Maine", "Maryland", "Massachusetts", "Michigan", "Minnesota",
-  "Mississippi", "Missouri", "Montana", "Nebraska", "Nevada",
-  "New Hampshire", "New Jersey", "New Mexico", "New York",
-  "North Carolina", "North Dakota", "Ohio", "Oklahoma", "Oregon",
-  "Pennsylvania", "Rhode Island", "South Carolina", "South Dakota",
-  "Tennessee", "Texas", "Utah", "Vermont", "Virginia", "Washington",
-  "West Virginia", "Wisconsin", "Wyoming"
-];
+const initialFormState = {
+  lead_first_name: "",
+  lead_last_name: "",
+  lead_email: "",
+  lead_phone: "",
+  zip_code: "",
+  state: "",
+  incident_date_option_b: "",
+  were_you_at_fault: "",
+  were_you_injured: "",
+  have_attorney: "",
+  doctor_treatment: "",
+  certificate_type: "",
+  certificate_id: "",
+  certificate_url: "",
+  source_url: "",
+  comments: "",
+  ip_address: ""
+};
 
 export default function AccidentLeadForm() {
-  const [formData, setFormData] = useState({
-    lead_first_name: "",
-    lead_last_name: "",
-    lead_email: "",
-    lead_phone: "",
-    zip_code: "",
-    state: "",
-    certificate_type: "Jornaya",
-    certificate_id: "",
-    certificate_url: "",
-    source_url: "",
-    ip_address: "",
-    incident_date_option_b: "",
-    were_you_injured: "Yes",
-    were_you_at_fault: "No",
-    have_attorney: "No",
-    doctor_treatment: "Yes",
-    expressed_interest: "Yes",
-    injury_cause: "Car Accident",
-    primary_injury: "Back or Neck Pain",
-    settled_insurance: "No",
-    signed_retainer: "No",
-    driver_insurance: "Yes",
-    role_in_accident: "driver",
-    accident_vehicle_count: "1",
-    comments: ""
-  });
+  const [formData, setFormData] = useState(initialFormState);
+
+  // Get IP Address on mount
+  useEffect(() => {
+    axios.get("https://api.ipify.org?format=json").then((res) => {
+      setFormData((prev) => ({ ...prev, ip_address: res.data.ip }));
+    });
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -67,39 +57,32 @@ export default function AccidentLeadForm() {
       ip_address: formData.ip_address,
       fields: [
         { ref: "incident_date_option_b", answer: formData.incident_date_option_b },
-        { ref: "were_you_injured", answer: formData.were_you_injured },
         { ref: "were_you_at_fault", answer: formData.were_you_at_fault },
-        { ref: "injury_cause", answer: formData.injury_cause },
-        { ref: "expressed_interest", answer: formData.expressed_interest },
+        { ref: "were_you_injured", answer: formData.were_you_injured },
         { ref: "have_attorney", answer: formData.have_attorney },
-        { ref: "primary_injury", answer: formData.primary_injury },
         { ref: "doctor_treatment", answer: formData.doctor_treatment },
-        { ref: "accident_vehicle_count", answer: formData.accident_vehicle_count },
-        { ref: "settled_insurance", answer: formData.settled_insurance },
-        { ref: "signed_retainer", answer: formData.signed_retainer },
-        { ref: "driver_insurance", answer: formData.driver_insurance },
-        { ref: "role_in_accident", answer: formData.role_in_accident },
         { ref: "comments", answer: formData.comments }
       ]
     };
 
     try {
       const res = await axios.post(
-        "https://api.accident2.dev/api/lead-create",
+        "https://api.accident.com/api/lead-create",
         payload,
         {
           headers: {
-            "api-key": "2g62oap5-0ao9-nT4U-JSBg-RYj8nPnRb8X6",
-            "api-secret": "28788c5c5c346728bac8bbfd74e3e2d5dc8b22e4",
+            "api-key": "57REEZFS-DVx9-Xo0g-Z8sA-S8jJU3QVrYXe",
+            "api-secret": "250fbd13db1334ff1a141a1bb5077f7b2a91b9ec",
             "Content-Type": "application/json"
           }
         }
       );
-      console.log("Response:", res.data);
       alert("Lead submitted successfully!");
+      console.log(res.data);
+      setFormData(initialFormState);
     } catch (err) {
-      console.error("Error submitting lead:", err);
       alert("Error submitting lead");
+      console.error(err);
     }
   };
 
@@ -113,50 +96,14 @@ export default function AccidentLeadForm() {
           Auto Accident Lead Form
         </h2>
 
+        {/* Name & Contact */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <input
-            name="lead_first_name"
-            placeholder="First Name"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            name="lead_last_name"
-            placeholder="Last Name"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            name="lead_email"
-            placeholder="Email"
-            type="email"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            name="lead_phone"
-            placeholder="Phone"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            name="zip_code"
-            placeholder="ZIP Code"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          />
-
-          <select
-            name="state"
-            onChange={handleChange}
-            required
-            className="border rounded-lg p-3 focus:ring-2 focus:ring-blue-500"
-          >
+          <input name="lead_first_name" placeholder="First Name" value={formData.lead_first_name} onChange={handleChange} required className="border rounded-lg p-3" />
+          <input name="lead_last_name" placeholder="Last Name" value={formData.lead_last_name} onChange={handleChange} required className="border rounded-lg p-3" />
+          <input name="lead_email" type="email" placeholder="Email" value={formData.lead_email} onChange={handleChange} required className="border rounded-lg p-3" />
+          <input name="lead_phone" placeholder="Phone" value={formData.lead_phone} onChange={handleChange} required className="border rounded-lg p-3" />
+          <input name="zip_code" placeholder="ZIP Code" value={formData.zip_code} onChange={handleChange} required className="border rounded-lg p-3" />
+          <select name="state" value={formData.state} onChange={handleChange} required className="border rounded-lg p-3">
             <option value="">Select State</option>
             {US_STATES.map((state) => (
               <option key={state} value={state}>{state}</option>
@@ -164,17 +111,53 @@ export default function AccidentLeadForm() {
           </select>
         </div>
 
-        <textarea
-          name="comments"
-          placeholder="Describe your case"
-          onChange={handleChange}
-          className="border rounded-lg p-3 w-full focus:ring-2 focus:ring-blue-500"
-        />
+        {/* Additional Accident Fields */}
+        <select name="incident_date_option_b" value={formData.incident_date_option_b} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">When did the accident happen?</option>
+          <option>Less than 1 year</option>
+          <option>Less than 2 years</option>
+          <option>Less than 3 years</option>
+          <option>MM-DD-YYYY</option>
+        </select>
 
-        <button
-          type="submit"
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg text-lg font-semibold transition duration-300"
-        >
+        <select name="were_you_at_fault" value={formData.were_you_at_fault} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">Were you at fault?</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+
+        <select name="were_you_injured" value={formData.were_you_injured} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">Were you injured?</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+
+        <select name="have_attorney" value={formData.have_attorney} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">Do you have an attorney?</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+
+        <select name="doctor_treatment" value={formData.doctor_treatment} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">Did you receive medical treatment?</option>
+          <option>Yes</option>
+          <option>No</option>
+        </select>
+
+        <select name="certificate_type" value={formData.certificate_type} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+          <option value="">Certificate Type</option>
+          <option>Jornaya</option>
+          <option>Trusted Form</option>
+        </select>
+
+        <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
+        <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
+        <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
+
+        {/* Comments */}
+        <textarea name="comments" placeholder="Describe your case" value={formData.comments} onChange={handleChange} className="border rounded-lg p-3 w-full" />
+
+        <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
           Submit Lead
         </button>
       </form>
