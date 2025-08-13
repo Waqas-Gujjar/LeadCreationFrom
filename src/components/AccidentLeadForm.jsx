@@ -36,7 +36,8 @@ export default function AccidentLeadForm() {
 
   // Fetch IP Address on mount
   useEffect(() => {
-    axios.get("https://api.ipify.org?format=json")
+    axios
+      .get("https://api.ipify.org?format=json")
       .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
       .catch(err => console.error("Failed to fetch IP", err));
   }, []);
@@ -64,10 +65,20 @@ export default function AccidentLeadForm() {
       return;
     }
 
+    const API_URL = process.env.REACT_APP_API_URL;
+    const API_KEY = process.env.REACT_APP_API_KEY;
+    const API_SECRET = process.env.REACT_APP_API_SECRET;
+    const DEAL_ID = process.env.REACT_APP_DEAL_ID;
+
+    if (!API_URL || !API_KEY || !API_SECRET || !DEAL_ID) {
+      alert("API credentials are not properly set.");
+      return;
+    }
+
     const payload = {
       arrived_at: new Date().toISOString(),
       test_mode: false,
-      deal: process.env.REACT_APP_DEAL_ID,
+      deal: DEAL_ID,
       lead_first_name: formData.lead_first_name,
       lead_last_name: formData.lead_last_name,
       lead_email: formData.lead_email,
@@ -99,22 +110,20 @@ export default function AccidentLeadForm() {
     };
 
     try {
-      const res = await axios.post(
-        process.env.REACT_APP_API_URL,
-        payload,
-        {
-          headers: {
-            "api-key": process.env.REACT_APP_API_KEY,
-            "api-secret": process.env.REACT_APP_API_SECRET,
-            "Content-Type": "application/json"
-          }
+      const res = await axios.post(API_URL, payload, {
+        headers: {
+          "api-key": API_KEY,
+          "api-secret": API_SECRET,
+          "Content-Type": "application/json"
         }
-      );
+      });
+
       alert("Lead submitted successfully!");
       console.log(res.data);
       setFormData(initialFormState); // Reset form
     } catch (err) {
-      alert("Error submitting lead");
+      const message = err.response?.data?.message || err.message || "Error submitting lead";
+      alert(message);
       console.error(err);
     }
   };
@@ -174,9 +183,9 @@ export default function AccidentLeadForm() {
           <option>Trusted Form</option>
         </select>
 
-        <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
-        <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
-        <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
+        <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
+        <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
+        <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
 
         <textarea name="comments" placeholder="Describe your case" value={formData.comments} onChange={handleChange} className="border rounded-lg p-3 w-full" />
 
