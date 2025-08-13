@@ -33,15 +33,16 @@ const initialFormState = {
 export default function AccidentLeadForm() {
   const [formData, setFormData] = useState(initialFormState);
   const [successMessage, setSuccessMessage] = useState("");
+useEffect(() => {
+  // Fetch IP
+  axios.get("https://api.ipify.org?format=json")
+    .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
+    .catch(err => console.error("Failed to fetch IP", err));
 
-  useEffect(() => {
-    // Fetch IP Address
-    axios.get("https://api.ipify.org?format=json")
-      .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
-      .catch(err => console.error("Failed to fetch IP", err));
-
-    // Load TrustedForm Script
+  // Load TrustedForm Script only if not loaded
+  if (!document.getElementById("trustedform-script")) {
     const tf = document.createElement("script");
+    tf.id = "trustedform-script";
     tf.type = "text/javascript";
     tf.async = true;
     tf.src =
@@ -49,14 +50,34 @@ export default function AccidentLeadForm() {
       "://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&l=" +
       new Date().getTime() +
       Math.random();
+    tf.onload = () => console.log("TrustedForm Script loaded successfully");
+    tf.onerror = () => console.error("TrustedForm Script failed to load");
     document.body.appendChild(tf);
+  } else {
+    console.log("TrustedForm Script already loaded");
+  }
 
-    // Fallback noscript image
+  // Fallback noscript
+  if (!document.getElementById("trustedform-noscript")) {
     const noscriptImg = document.createElement("img");
+    noscriptImg.id = "trustedform-noscript";
     noscriptImg.src = "https://api.trustedform.com/ns.gif";
     noscriptImg.style.display = "none";
     document.body.appendChild(noscriptImg);
-  }, []);
+  }
+
+  // 🔹 Watch for TrustedForm certificate URL and log it
+  const interval = setInterval(() => {
+    const certInput = document.getElementById("xxTrustedFormCertUrl");
+    if (certInput && certInput.value) {
+      console.log("TrustedForm Certificate URL:", certInput.value);
+      setFormData(prev => ({ ...prev, certificate_url: certInput.value }));
+      clearInterval(interval);
+    }
+  }, 500);
+
+  return () => clearInterval(interval);
+}, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
