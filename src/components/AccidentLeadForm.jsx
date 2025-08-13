@@ -20,30 +20,54 @@ const initialFormState = {
   certificate_url: "",
   source_url: "",
   comments: "",
+  expressed_interest: "Yes",
+  injury_cause: "Car Accident",
+  primary_injury: "Back or Neck Pain",
+  settled_insurance: "No",
+  signed_retainer: "No",
+  driver_insurance: "Yes",
+  role_in_accident: "driver",
+  accident_vehicle_count: "1",
   ip_address: ""
 };
 
 export default function AccidentLeadForm() {
   const [formData, setFormData] = useState(initialFormState);
 
-  // Get IP Address on mount
+  // Fetch IP Address on mount
   useEffect(() => {
-    axios.get("https://api.ipify.org?format=json").then((res) => {
-      setFormData((prev) => ({ ...prev, ip_address: res.data.ip }));
-    });
+    axios.get("https://api.ipify.org?format=json")
+      .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
+      .catch(err => console.error("Failed to fetch IP", err));
   }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const validateForm = () => {
+    if (!formData.lead_first_name.trim()) return "First name is required";
+    if (!formData.lead_last_name.trim()) return "Last name is required";
+    if (!formData.lead_email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) return "Invalid email";
+    if (!formData.lead_phone.match(/^\d{10}$/)) return "Phone must be 10 digits";
+    if (!formData.zip_code.match(/^\d{5}$/)) return "ZIP code must be 5 digits";
+    if (!formData.state) return "State is required";
+    return null;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const errorMsg = validateForm();
+    if (errorMsg) {
+      alert(errorMsg);
+      return;
+    }
 
     const payload = {
       arrived_at: new Date().toISOString(),
       test_mode: false,
-      deal: "eQxK9n0XBrdbWwygYMmAPNO4aV2JvY",
+      deal: process.env.REACT_APP_DEAL_ID,
       lead_first_name: formData.lead_first_name,
       lead_last_name: formData.lead_last_name,
       lead_email: formData.lead_email,
@@ -56,30 +80,39 @@ export default function AccidentLeadForm() {
       source_url: formData.source_url,
       ip_address: formData.ip_address,
       fields: [
+        { ref: "state", answer: formData.state },
         { ref: "incident_date_option_b", answer: formData.incident_date_option_b },
         { ref: "were_you_at_fault", answer: formData.were_you_at_fault },
         { ref: "were_you_injured", answer: formData.were_you_injured },
         { ref: "have_attorney", answer: formData.have_attorney },
         { ref: "doctor_treatment", answer: formData.doctor_treatment },
-        { ref: "comments", answer: formData.comments }
+        { ref: "comments", answer: formData.comments },
+        { ref: "expressed_interest", answer: formData.expressed_interest },
+        { ref: "injury_cause", answer: formData.injury_cause },
+        { ref: "primary_injury", answer: formData.primary_injury },
+        { ref: "settled_insurance", answer: formData.settled_insurance },
+        { ref: "signed_retainer", answer: formData.signed_retainer },
+        { ref: "driver_insurance", answer: formData.driver_insurance },
+        { ref: "role_in_accident", answer: formData.role_in_accident },
+        { ref: "accident_vehicle_count", answer: formData.accident_vehicle_count }
       ]
     };
 
     try {
       const res = await axios.post(
-        "https://api.accident.com/api/lead-create",
+        process.env.REACT_APP_API_URL,
         payload,
         {
           headers: {
-            "api-key": "57REEZFS-DVx9-Xo0g-Z8sA-S8jJU3QVrYXe",
-            "api-secret": "250fbd13db1334ff1a141a1bb5077f7b2a91b9ec",
+            "api-key": process.env.REACT_APP_API_KEY,
+            "api-secret": process.env.REACT_APP_API_SECRET,
             "Content-Type": "application/json"
           }
         }
       );
       alert("Lead submitted successfully!");
       console.log(res.data);
-      setFormData(initialFormState);
+      setFormData(initialFormState); // Reset form
     } catch (err) {
       alert("Error submitting lead");
       console.error(err);
@@ -88,15 +121,9 @@ export default function AccidentLeadForm() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center py-8">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-xl p-8 w-full max-w-2xl space-y-6"
-      >
-        <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">
-          Auto Accident Lead Form
-        </h2>
+      <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 w-full max-w-2xl space-y-6">
+        <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">Auto Accident Lead Form</h2>
 
-        {/* Name & Contact */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input name="lead_first_name" placeholder="First Name" value={formData.lead_first_name} onChange={handleChange} required className="border rounded-lg p-3" />
           <input name="lead_last_name" placeholder="Last Name" value={formData.lead_last_name} onChange={handleChange} required className="border rounded-lg p-3" />
@@ -105,13 +132,10 @@ export default function AccidentLeadForm() {
           <input name="zip_code" placeholder="ZIP Code" value={formData.zip_code} onChange={handleChange} required className="border rounded-lg p-3" />
           <select name="state" value={formData.state} onChange={handleChange} required className="border rounded-lg p-3">
             <option value="">Select State</option>
-            {US_STATES.map((state) => (
-              <option key={state} value={state}>{state}</option>
-            ))}
+            {US_STATES.map(state => <option key={state} value={state}>{state}</option>)}
           </select>
         </div>
 
-        {/* Additional Accident Fields */}
         <select name="incident_date_option_b" value={formData.incident_date_option_b} onChange={handleChange} required className="border rounded-lg p-3 w-full">
           <option value="">When did the accident happen?</option>
           <option>Less than 1 year</option>
@@ -154,7 +178,6 @@ export default function AccidentLeadForm() {
         <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
         <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} required className="border rounded-lg p-3 w-full" />
 
-        {/* Comments */}
         <textarea name="comments" placeholder="Describe your case" value={formData.comments} onChange={handleChange} className="border rounded-lg p-3 w-full" />
 
         <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
