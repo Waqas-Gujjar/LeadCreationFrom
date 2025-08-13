@@ -32,12 +32,30 @@ const initialFormState = {
 
 export default function AccidentLeadForm() {
   const [formData, setFormData] = useState(initialFormState);
-  const [successMessage, setSuccessMessage] = useState(""); // ✅ New State
+  const [successMessage, setSuccessMessage] = useState("");
 
   useEffect(() => {
+    // Fetch IP Address
     axios.get("https://api.ipify.org?format=json")
       .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
       .catch(err => console.error("Failed to fetch IP", err));
+
+    // Load TrustedForm Script
+    const tf = document.createElement("script");
+    tf.type = "text/javascript";
+    tf.async = true;
+    tf.src =
+      (document.location.protocol === "https:" ? "https" : "http") +
+      "://api.trustedform.com/trustedform.js?field=xxTrustedFormCertUrl&use_tagged_consent=true&l=" +
+      new Date().getTime() +
+      Math.random();
+    document.body.appendChild(tf);
+
+    // Fallback noscript image
+    const noscriptImg = document.createElement("img");
+    noscriptImg.src = "https://api.trustedform.com/ns.gif";
+    noscriptImg.style.display = "none";
+    document.body.appendChild(noscriptImg);
   }, []);
 
   const handleChange = (e) => {
@@ -116,13 +134,9 @@ export default function AccidentLeadForm() {
         }
       });
 
-      // ✅ Show Success Message
       setSuccessMessage(`Response Code: 200 | Response: Lead generated successfully created success`);
-      
       console.log(res.data);
       setFormData(initialFormState);
-
-      // Hide after 5 seconds
       setTimeout(() => setSuccessMessage(""), 5000);
 
     } catch (err) {
@@ -135,8 +149,7 @@ export default function AccidentLeadForm() {
   return (
     <div className="min-h-screen bg-gray-100 flex justify-center items-center py-8">
       <div className="w-full max-w-2xl">
-        
-        {/* ✅ Success Message */}
+
         {successMessage && (
           <div className="bg-blue-100 border border-blue-400 text-blue-700 px-4 py-3 rounded mb-4">
             {successMessage}
@@ -146,7 +159,6 @@ export default function AccidentLeadForm() {
         <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 space-y-6">
           <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">Auto Accident Lead Form</h2>
 
-          {/* Name & Contact */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input name="lead_first_name" placeholder="First Name" value={formData.lead_first_name} onChange={handleChange} required className="border rounded-lg p-3" />
             <input name="lead_last_name" placeholder="Last Name" value={formData.lead_last_name} onChange={handleChange} required className="border rounded-lg p-3" />
@@ -159,7 +171,6 @@ export default function AccidentLeadForm() {
             </select>
           </div>
 
-          {/* Accident Details */}
           <select name="incident_date_option_b" value={formData.incident_date_option_b} onChange={handleChange} required className="border rounded-lg p-3 w-full">
             <option value="">When did the accident happen?</option>
             <option>Less than 1 year</option>
@@ -199,9 +210,19 @@ export default function AccidentLeadForm() {
           </select>
 
           <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange} className="border rounded-lg p-3 w-full" />
-          <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange} className="border rounded-lg p-3 w-full" />
-          <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} className="border rounded-lg p-3 w-full" />
+          
+          {/* TrustedForm will auto-fill this */}
+          <input
+            id="xxTrustedFormCertUrl"
+            name="certificate_url"
+            type="url"
+            placeholder="Certificate URL"
+            value={formData.certificate_url}
+            onChange={handleChange}
+            className="border rounded-lg p-3 w-full"
+          />
 
+          <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} className="border rounded-lg p-3 w-full" />
           <textarea name="comments" placeholder="Describe your case" value={formData.comments} onChange={handleChange} className="border rounded-lg p-3 w-full" />
 
           <button type="submit" className="w-full cursor-pointer bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
