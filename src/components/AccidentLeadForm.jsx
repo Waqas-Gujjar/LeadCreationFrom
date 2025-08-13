@@ -1,4 +1,4 @@
-// AccidentLeadForm.js
+// AccidentLeadForm.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { US_STATES } from "./states";
@@ -34,10 +34,9 @@ const initialFormState = {
 export default function AccidentLeadForm() {
   const [formData, setFormData] = useState(initialFormState);
 
-  // Fetch IP Address on mount
+  // Get IP Address on mount
   useEffect(() => {
-    axios
-      .get("https://api.ipify.org?format=json")
+    axios.get("https://api.ipify.org?format=json")
       .then(res => setFormData(prev => ({ ...prev, ip_address: res.data.ip })))
       .catch(err => console.error("Failed to fetch IP", err));
   }, []);
@@ -65,10 +64,11 @@ export default function AccidentLeadForm() {
       return;
     }
 
-    const API_URL = process.env.REACT_APP_API_URL;
-    const API_KEY = process.env.REACT_APP_API_KEY;
-    const API_SECRET = process.env.REACT_APP_API_SECRET;
-    const DEAL_ID = process.env.REACT_APP_DEAL_ID;
+    // Environment variables
+    const API_URL = import.meta.env.VITE_API_URL;
+    const API_KEY = import.meta.env.VITE_API_KEY;
+    const API_SECRET = import.meta.env.VITE_API_SECRET;
+    const DEAL_ID = import.meta.env.VITE_DEAL_ID;
 
     if (!API_URL || !API_KEY || !API_SECRET || !DEAL_ID) {
       alert("API credentials are not properly set.");
@@ -117,10 +117,9 @@ export default function AccidentLeadForm() {
           "Content-Type": "application/json"
         }
       });
-
       alert("Lead submitted successfully!");
       console.log(res.data);
-      setFormData(initialFormState); // Reset form
+      setFormData(initialFormState);
     } catch (err) {
       const message = err.response?.data?.message || err.message || "Error submitting lead";
       alert(message);
@@ -133,6 +132,7 @@ export default function AccidentLeadForm() {
       <form onSubmit={handleSubmit} className="bg-white shadow-lg rounded-xl p-8 w-full max-w-2xl space-y-6">
         <h2 className="text-2xl font-bold text-gray-800 border-b pb-3">Auto Accident Lead Form</h2>
 
+        {/* Name & Contact */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input name="lead_first_name" placeholder="First Name" value={formData.lead_first_name} onChange={handleChange} required className="border rounded-lg p-3" />
           <input name="lead_last_name" placeholder="Last Name" value={formData.lead_last_name} onChange={handleChange} required className="border rounded-lg p-3" />
@@ -145,6 +145,7 @@ export default function AccidentLeadForm() {
           </select>
         </div>
 
+        {/* Accident Details */}
         <select name="incident_date_option_b" value={formData.incident_date_option_b} onChange={handleChange} required className="border rounded-lg p-3 w-full">
           <option value="">When did the accident happen?</option>
           <option>Less than 1 year</option>
@@ -177,15 +178,15 @@ export default function AccidentLeadForm() {
           <option>No</option>
         </select>
 
-        <select name="certificate_type" value={formData.certificate_type} onChange={handleChange} required className="border rounded-lg p-3 w-full">
+        <select name="certificate_type" value={formData.certificate_type} onChange={handleChange} className="border rounded-lg p-3 w-full">
           <option value="">Certificate Type</option>
           <option>Jornaya</option>
           <option>Trusted Form</option>
         </select>
 
-        <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
-        <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
-        <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange}  className="border rounded-lg p-3 w-full" />
+        <input name="certificate_id" placeholder="Certificate ID" value={formData.certificate_id} onChange={handleChange} className="border rounded-lg p-3 w-full" />
+        <input name="certificate_url" type="url" placeholder="Certificate URL" value={formData.certificate_url} onChange={handleChange} className="border rounded-lg p-3 w-full" />
+        <input name="source_url" type="url" placeholder="Source URL" value={formData.source_url} onChange={handleChange} className="border rounded-lg p-3 w-full" />
 
         <textarea name="comments" placeholder="Describe your case" value={formData.comments} onChange={handleChange} className="border rounded-lg p-3 w-full" />
 
